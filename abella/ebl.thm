@@ -36,3 +36,25 @@ Theorem monotonocity-step : forall w P M, {world w} -> force w P M -> force (su 
   search.
   unfold.  exists M'.  split.  search.
   backchain IH.  case H1.  search.
+
+Theorem verifies-not-step : forall P M M', verifies P M -> {step M M'} -> false.
+  induction on 1.
+  intros.
+  case H1.
+  case H2.
+  case H2.
+  case H2. backchain IH.
+  case H2. backchain IH.
+  case H2.
+
+Theorem final-not-step : forall M M', {final M} -> {step M M'} -> false.
+  induction on 1.
+  intros.
+  case H1.
+  case H2.
+  case H2.
+  case H2.
+  case H2. backchain IH.
+  case H2. backchain IH.
+
+
