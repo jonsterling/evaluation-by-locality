@@ -1,0 +1,38 @@
+Specification "ebl".
+
+Define verifies : ty -> tm -> prop ,
+       force : nat -> ty -> tm -> prop ,
+       justifies : ty -> tm -> prop by
+
+  verifies unit tt ;
+  verifies (and P Q) (pair M N) := exists w, force w P M /\ force w Q N ;
+  verifies (or P Q) (inl M) := verifies P M ;
+  verifies (or P Q) (inr M) := verifies Q M ;
+  verifies (imp P Q) (lam E) := forall x, verifies P x -> justifies Q (E x) ;
+
+  force ze P M := verifies P M ;
+  force (su W) P M := exists M', {step' M M'} /\ force W P M' ;
+
+  justifies P M := exists w, force w P M.
+
+Theorem verifies-final : forall P M, verifies P M -> {final M}.
+  induction on 1.
+  intros.
+  case H1.
+  search. search.
+  apply IH to H2. search.
+  apply IH to H2. search.
+  search.
+
+Theorem monotonocity-step : forall w P M, {world w} -> force w P M -> force (su w) P M.
+  induction on 2.
+  intros.
+  case H2.
+  case H3.
+  search.
+  search.
+  apply verifies-final to H4. search.
+  apply verifies-final to H4. search.
+  search.
+  unfold.  exists M'.  split.  search.
+  backchain IH.  case H1.  search.

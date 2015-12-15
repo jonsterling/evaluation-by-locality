@@ -1,0 +1,29 @@
+%use equality/integers.
+%use inequality/integers.
+
+%abbrev world = integer.
+
+prop : type.
+true : prop.
+false : prop.
+and : prop -> prop -> prop.
+or : prop -> prop -> prop.
+
+tm : type.
+tt : tm.
+pair : tm -> tm -> tm.
+lam : (tm -> tm) -> tm.
+
+step : tm -> tm -> type.
+%mode step +M -N.
+
+verif : tm -> prop -> type.
+%mode verif +M +P.
+
+force : world -> tm -> prop -> type.
+%mode force +W +M +P.
+
+verif/true : verif tt true.
+verif/and : {W} verif (pair M N) (and P Q)
+             <- force W M P
+             <- force W N Q.
