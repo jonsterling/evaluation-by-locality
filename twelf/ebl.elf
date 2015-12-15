@@ -13,17 +13,72 @@ tm : type.
 tt : tm.
 pair : tm -> tm -> tm.
 lam : (tm -> tm) -> tm.
+inl : tm -> tm.
+inr : tm -> tm.
 
 step : tm -> tm -> type.
 %mode step +M -N.
+
+halt : tm -> type.
+%mode halt +M.
+
+halt/tt : halt tt.
+
+step? : tm -> tm -> type.
+%mode step? +M -N.
+
+step?/step
+   : step? M N
+      <- step M N.
+step?/halt
+   : step? M M
+      <- halt M.
 
 verif : tm -> prop -> type.
 %mode verif +M +P.
 
 force : world -> tm -> prop -> type.
-%mode force +W +M +P.
+%mode force -W +M +P.
 
-verif/true : verif tt true.
-verif/and : {W} verif (pair M N) (and P Q)
-             <- force W M P
-             <- force W N Q.
+force/verif
+   : force 0 M P
+      <- verif M P.
+
+force/step
+   : force (W + 1) M P
+      <- step? M M'
+      <- force W M' P.
+
+verif/true
+   : verif tt true.
+verif/and
+   : verif (pair M N) (and P Q)
+      <- force W M P
+      <- force W N Q.
+verif/or/1
+   : verif (inl M) (or P Q)
+      <- verif M P.
+verif/or/2
+   : verif (inr M) (or P Q)
+      <- verif M Q.
+
+world : integer -> type.
+%mode world -W.
+world/ze
+   : world 0.
+world/su
+   : world (W + 1)
+      <- world W.
+
+force-mono-step : world W -> force W M P -> force (W + 1) M P -> type.
+%mode force-mono-step +W +D -E.
+
+- : force-mono-step
+     world/ze
+     (force/verif verif/true)
+     (force/step
+        (force/verif verif/true)
+        (step?/halt halt/tt)).
+
+%worlds () (force-mono-step _ _ _).
+% %total [W D] (force-mono-step W D _).
