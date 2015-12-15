@@ -1,5 +1,4 @@
 %use equality/integers.
-%use inequality/integers.
 
 %abbrev world = integer.
 
@@ -23,6 +22,9 @@ halt : tm -> type.
 %mode halt +M.
 
 halt/tt : halt tt.
+halt/pair : halt (pair M N).
+halt/inl : halt (inl M) <- halt M.
+halt/inr : halt (inr M) <- halt M.
 
 step? : tm -> tm -> type.
 %mode step? +M -N.
@@ -37,15 +39,19 @@ step?/halt
 verif : tm -> prop -> type.
 %mode verif +M +P.
 
+world : type.
+ze : world.
+su : world -> world.
+
 force : world -> tm -> prop -> type.
 %mode force -W +M +P.
 
 force/verif
-   : force 0 M P
+   : force ze M P
       <- verif M P.
 
 force/step
-   : force (W + 1) M P
+   : force (su W) M P
       <- step? M M'
       <- force W M' P.
 
@@ -62,23 +68,49 @@ verif/or/2
    : verif (inr M) (or P Q)
       <- verif M Q.
 
-world : integer -> type.
-%mode world -W.
-world/ze
-   : world 0.
-world/su
-   : world (W + 1)
-      <- world W.
 
-force-mono-step : world W -> force W M P -> force (W + 1) M P -> type.
-%mode force-mono-step +W +D -E.
+verif-halt : verif M P -> halt M -> type.
+%mode verif-halt +V -H.
+- : verif-halt verif/true halt/tt.
+- : verif-halt (verif/and X Y) halt/pair.
+- : verif-halt (verif/or/1 X) (halt/inl H)
+     <- verif-halt X H.
+- : verif-halt (verif/or/2 X) (halt/inr H)
+     <- verif-halt X H.
+%worlds () (verif-halt _ _).
+%total V (verif-halt V _).
+
+force-mono-step : force W M P -> force (su W) M P -> type.
+%mode force-mono-step +D -E.
 
 - : force-mono-step
-     world/ze
      (force/verif verif/true)
      (force/step
         (force/verif verif/true)
         (step?/halt halt/tt)).
 
-%worlds () (force-mono-step _ _ _).
-% %total [W D] (force-mono-step W D _).
+- : force-mono-step
+     (force/verif (verif/and X Y))
+     (force/step
+        (force/verif (verif/and X Y))
+        (step?/halt halt/pair)).
+
+- : force-mono-step
+     (force/verif (verif/or/1 X))
+     (force/step
+        (force/verif (verif/or/1 X))
+        (step?/halt (halt/inl H)))
+     <- verif-halt X H.
+
+- : force-mono-step
+     (force/verif (verif/or/2 X))
+     (force/step
+        (force/verif (verif/or/2 X))
+        (step?/halt (halt/inr H)))
+     <- verif-halt X H.
+
+- : force-mono-step
+     (force/step F S) _??.
+
+%worlds () (force-mono-step _ _).
+%total D (force-mono-step D _).
