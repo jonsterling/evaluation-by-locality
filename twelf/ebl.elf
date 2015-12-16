@@ -1,44 +1,3 @@
-%use equality/integers.
-
-%abbrev world = integer.
-
-prop : type.
-true : prop.
-false : prop.
-and : prop -> prop -> prop.
-or : prop -> prop -> prop.
-imp : prop -> prop -> prop.
-
-tm : type.
-tt : tm.
-pair : tm -> tm -> tm.
-lam : (tm -> tm) -> tm.
-inl : tm -> tm.
-inr : tm -> tm.
-ap : tm -> tm -> tm.
-
-step : tm -> tm -> type.
-%mode step +M -N.
-
-halt : tm -> type.
-%mode halt +M.
-
-halt/tt : halt tt.
-halt/pair : halt (pair M N).
-halt/inl : halt (inl M) <- halt M.
-halt/inr : halt (inr M) <- halt M.
-halt/lam : halt (lam E).
-
-step? : tm -> tm -> type.
-%mode step? +M -N.
-
-step?/step
-   : step? M N
-      <- step M N.
-step?/halt
-   : step? M M
-      <- halt M.
-
 world : type.
 ze : world.
 su : world -> world.
@@ -67,8 +26,8 @@ force/step
       <- step? M M'
       <- force W M' P.
 
-verif/true
-   : verif tt true.
+verif/unit
+   : verif tt unit.
 verif/and
    : verif (pair M N) (and P Q)
       <- justif M P
@@ -86,7 +45,7 @@ verif/imp
 % every verification is a canonical form
 verif-halt : verif M P -> halt M -> type.
 %mode verif-halt +V -H.
-- : verif-halt verif/true halt/tt.
+- : verif-halt verif/unit halt/tt.
 - : verif-halt (verif/and X Y) halt/pair.
 - : verif-halt (verif/or/1 X) (halt/inl H)
      <- verif-halt X H.
@@ -101,9 +60,9 @@ force-mono : force W M P -> force (su W) M P -> type.
 %mode force-mono +D -E.
 
 - : force-mono
-     (force/verif verif/true)
+     (force/verif verif/unit)
      (force/step
-        (force/verif verif/true)
+        (force/verif verif/unit)
         (step?/halt halt/tt)).
 
 - : force-mono

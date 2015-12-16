@@ -1,0 +1,9 @@
+tm : type.
+tt : tm.
+pair : tm -> tm -> tm.
+lam : (tm -> tm) -> tm.
+inl : tm -> tm.
+inr : tm -> tm.
+ap : tm -> tm -> tm.
+fst : tm -> tm.
+snd : tm -> tm.

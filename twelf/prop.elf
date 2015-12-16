@@ -1,0 +1,6 @@
+prop : type.
+unit : prop.
+void : prop.
+and : prop -> prop -> prop.
+or : prop -> prop -> prop.
+imp : prop -> prop -> prop.

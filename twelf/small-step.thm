@@ -1,0 +1,11 @@
+step-and-halt-absurd : step M N -> halt M -> false -> type.
+%mode step-and-halt-absurd +S +H -E.
+
+- : step-and-halt-absurd (step/inl S) (halt/inl H) Z
+     <- step-and-halt-absurd S H Z.
+
+- : step-and-halt-absurd (step/inr S) (halt/inr H) Z
+     <- step-and-halt-absurd S H Z.
+
+%worlds () (step-and-halt-absurd _ _ _).
+%total H (step-and-halt-absurd _ H _).

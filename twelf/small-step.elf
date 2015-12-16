@@ -1,0 +1,48 @@
+step : tm -> tm -> type.
+%mode step +M -N.
+
+halt : tm -> type.
+%mode halt +M.
+
+halt/tt
+   : halt tt.
+halt/pair
+   : halt (pair M N).
+halt/inl
+   : halt (inl M)
+      <- halt M.
+halt/inr
+   : halt (inr M)
+      <- halt M.
+halt/lam
+   : halt (lam E).
+
+step/inl
+   : step (inl M) (inl N)
+      <- step M N.
+
+step/inr
+   : step (inr M) (inr N)
+      <- step M N.
+
+step/fst
+   : step (fst M) (fst N)
+      <- step M N.
+step/fst/pair
+   : step (fst (pair M N)) M.
+
+step/snd
+   : step (snd M) (snd N)
+      <- step M N.
+step/snd/pair
+   : step (snd (pair M N)) N.
+
+step? : tm -> tm -> type.
+%mode step? +M -N.
+
+step?/step
+   : step? M N
+      <- step M N.
+step?/halt
+   : step? M M
+      <- halt M.
