@@ -1,0 +1,3 @@
+world : type.
+ze : world.
+su : world -> world.
