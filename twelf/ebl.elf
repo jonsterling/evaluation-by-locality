@@ -7,6 +7,7 @@ true : prop.
 false : prop.
 and : prop -> prop -> prop.
 or : prop -> prop -> prop.
+imp : prop -> prop -> prop.
 
 tm : type.
 tt : tm.
@@ -14,6 +15,7 @@ pair : tm -> tm -> tm.
 lam : (tm -> tm) -> tm.
 inl : tm -> tm.
 inr : tm -> tm.
+ap : tm -> tm -> tm.
 
 step : tm -> tm -> type.
 %mode step +M -N.
@@ -25,6 +27,7 @@ halt/tt : halt tt.
 halt/pair : halt (pair M N).
 halt/inl : halt (inl M) <- halt M.
 halt/inr : halt (inr M) <- halt M.
+halt/lam : halt (lam E).
 
 step? : tm -> tm -> type.
 %mode step? +M -N.
@@ -36,15 +39,24 @@ step?/halt
    : step? M M
       <- halt M.
 
-verif : tm -> prop -> type.
-%mode verif +M +P.
-
 world : type.
 ze : world.
 su : world -> world.
 
+verif : tm -> prop -> type.
+%mode verif +M +P.
+
+% forcing is verification at a world
 force : world -> tm -> prop -> type.
 %mode force -W +M +P.
+
+% justification is local truth
+justif : tm -> prop -> type.
+%mode justif +M +P.
+
+justif/force
+   : justif M P
+      <- force W M P.
 
 force/verif
    : force ze M P
@@ -59,16 +71,19 @@ verif/true
    : verif tt true.
 verif/and
    : verif (pair M N) (and P Q)
-      <- force W M P
-      <- force W N Q.
+      <- justif M P
+      <- justif N Q.
 verif/or/1
    : verif (inl M) (or P Q)
       <- verif M P.
 verif/or/2
    : verif (inr M) (or P Q)
       <- verif M Q.
+verif/imp
+   : verif (lam E) (imp P Q)
+      <- ({x} verif x P -> justif (E x) Q).
 
-
+% every verification is a canonical form
 verif-halt : verif M P -> halt M -> type.
 %mode verif-halt +V -H.
 - : verif-halt verif/true halt/tt.
@@ -77,40 +92,50 @@ verif-halt : verif M P -> halt M -> type.
      <- verif-halt X H.
 - : verif-halt (verif/or/2 X) (halt/inr H)
      <- verif-halt X H.
+-: verif-halt (verif/imp _) halt/lam.
 %worlds () (verif-halt _ _).
 %total V (verif-halt V _).
 
-force-mono-step : force W M P -> force (su W) M P -> type.
-%mode force-mono-step +D -E.
+% the monotonicity of forcing
+force-mono : force W M P -> force (su W) M P -> type.
+%mode force-mono +D -E.
 
-- : force-mono-step
+- : force-mono
      (force/verif verif/true)
      (force/step
         (force/verif verif/true)
         (step?/halt halt/tt)).
 
-- : force-mono-step
+- : force-mono
      (force/verif (verif/and X Y))
      (force/step
         (force/verif (verif/and X Y))
         (step?/halt halt/pair)).
 
-- : force-mono-step
+- : force-mono
      (force/verif (verif/or/1 X))
      (force/step
         (force/verif (verif/or/1 X))
         (step?/halt (halt/inl H)))
      <- verif-halt X H.
 
-- : force-mono-step
+- : force-mono
      (force/verif (verif/or/2 X))
      (force/step
         (force/verif (verif/or/2 X))
         (step?/halt (halt/inr H)))
      <- verif-halt X H.
 
-- : force-mono-step
-     (force/step F S) _??.
+- : force-mono
+     (force/verif (verif/imp E))
+     (force/step
+        (force/verif (verif/imp E))
+        (step?/halt halt/lam)).
 
-%worlds () (force-mono-step _ _).
-%total D (force-mono-step D _).
+- : force-mono
+     (force/step F S)
+     (force/step F' S)
+     <- force-mono F F'.
+
+%worlds () (force-mono _ _).
+%total D (force-mono D _).
